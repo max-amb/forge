@@ -46,7 +46,22 @@
         in
         # Passthru
         appDrv.overrideAttrs (_: {
-          passthru = mkPassthru app appDrv;
+          passthru = (mkPassthru app appDrv) // {
+            override =
+              newArgs:
+              let
+                oldMainPackage = app.programs.mainPackage;
+                newMainPackage = oldMainPackage.override newArgs;
+                newPackages = map (p: if p == oldMainPackage then newMainPackage else p) app.programs.packages;
+                newApp = app // {
+                  programs = app.programs // {
+                    mainPackage = newMainPackage;
+                    packages = newPackages;
+                  };
+                };
+              in
+                shellBundle newApp;
+          };
         });
 
       mkPassthru =
