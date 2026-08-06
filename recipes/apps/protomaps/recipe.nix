@@ -4,6 +4,12 @@
 }:
 
 {
+  pkgs.pmtiles = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.pmtiles;
+    };
+  };
   apps.protomaps = {
     displayName = "Protomaps";
     description = "Toolchain for creating and serving PMTiles map archives.";
@@ -50,9 +56,7 @@
         pkgs.pmtiles
       ];
 
-      runtimes.shell = {
-        enable = true;
-      };
+      runtimes.shell.enable = true;
     };
 
     services = {
@@ -75,13 +79,8 @@
         process.ports = [ "8080:8080" ];
       };
 
-      runtimes = {
-        container = {
-          enable = true;
-        };
-
-        nixos.enable = true;
-      };
+      runtimes.container.enable = true;
+      runtimes.nixos.enable = true;
     };
 
     test = {

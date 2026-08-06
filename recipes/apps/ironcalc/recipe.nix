@@ -5,6 +5,12 @@
 }:
 
 {
+  pkgs.ironcalc = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.ironcalc;
+    };
+  };
   apps.ironcalc = {
     displayName = "IronCalc";
     description = "Open source selfhosted spreadsheet engine.";
@@ -46,16 +52,17 @@
         process.ports = [ "8000:8000" ];
       };
 
-      runtimes.container = {
-        enable = true;
-        components.ironcalc = {
+      runtimes = {
+        container = {
+          enable = true;
+          components.ironcalc = {
+            packages = [ pkgs.ironcalc ];
+          };
+        };
+        nixos = {
+          enable = true;
           packages = [ pkgs.ironcalc ];
         };
-      };
-
-      runtimes.nixos = {
-        enable = true;
-        packages = [ pkgs.ironcalc ];
       };
     };
 

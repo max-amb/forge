@@ -4,6 +4,12 @@
 }:
 
 {
+  pkgs.inko = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.inko;
+    };
+  };
   apps.inko = {
     displayName = "Inko";
     description = "Programming language with deterministic automatic memory management.";
@@ -42,9 +48,7 @@
         pkgs.inko
       ];
 
-      runtimes.shell = {
-        enable = true;
-      };
+      runtimes.shell.enable = true;
     };
 
     test.programs.packages = [ pkgs.writableTmpDirAsHomeHook ];

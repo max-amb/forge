@@ -4,6 +4,12 @@
 }:
 
 {
+  pkgs.alive2 = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.alive2;
+    };
+  };
   apps.alive2 = {
     displayName = "Alive2";
     description = "Automatic verification of LLVM optimizations.";
@@ -34,9 +40,7 @@
         pkgs.alive2
       ];
 
-      runtimes.shell = {
-        enable = true;
-      };
+      runtimes.shell.enable = true;
     };
 
     test.programs.script = ''

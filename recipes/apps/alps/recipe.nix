@@ -4,6 +4,12 @@
 }:
 
 {
+  pkgs.alps = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.alps;
+    };
+  };
   apps.alps = {
     displayName = "Alps";
     description = "Simple, extensible webmail client.";
@@ -55,10 +61,8 @@
         };
       };
 
-      runtimes = {
-        container.enable = true;
-        nixos.enable = true;
-      };
+      runtimes.container.enable = true;
+      runtimes.nixos.enable = true;
     };
 
     test.services.script = ''

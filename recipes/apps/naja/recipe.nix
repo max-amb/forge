@@ -4,6 +4,12 @@
 }:
 
 {
+  pkgs.naja = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.naja;
+    };
+  };
   apps.naja = {
     displayName = "Naja";
     description = "EDA tool focused on post logic synthesis.";
@@ -37,9 +43,7 @@
         pkgs.naja
       ];
 
-      runtimes.shell = {
-        enable = true;
-      };
+      runtimes.shell.enable = true;
     };
 
     test.programs.script = ''

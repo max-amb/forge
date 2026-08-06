@@ -4,6 +4,12 @@
 }:
 
 {
+  pkgs.python3-weasyprint = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.python3Packages.weasyprint;
+    };
+  };
   apps.weasyprint = {
     displayName = "WeasyPrint";
     description = "Print rendering engine for HTML and CSS.";
@@ -44,12 +50,10 @@
 
     programs = {
       packages = [
-        pkgs.python3Packages.weasyprint
+        pkgs.python3-weasyprint
       ];
 
-      runtimes.shell = {
-        enable = true;
-      };
+      runtimes.shell.enable = true;
     };
 
     test.programs = {

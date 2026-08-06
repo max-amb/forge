@@ -4,6 +4,12 @@
 }:
 
 {
+  pkgs.xrsh = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.xrsh;
+    };
+  };
   apps.xrsh = {
     displayName = "xrsh";
     description = "Interactive text/OS terminal inside WebXR.";
@@ -34,9 +40,7 @@
         pkgs.xrsh
       ];
 
-      runtimes.shell = {
-        enable = true;
-      };
+      runtimes.shell.enable = true;
     };
   };
 }

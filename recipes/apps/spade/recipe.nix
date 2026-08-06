@@ -4,6 +4,19 @@
 }:
 
 {
+  pkgs.spade = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.spade;
+    };
+  };
+
+  pkgs.swim = {
+    build.identityBuilder = {
+      enable = true;
+      derivation = pkgs.pkgsOriginal.swim;
+    };
+  };
   apps.spade = {
     displayName = "Spade";
     description = "Standalone hardware description language.";
@@ -47,9 +60,7 @@
         pkgs.swim
       ];
 
-      runtimes.shell = {
-        enable = true;
-      };
+      runtimes.shell.enable = true;
     };
 
     test.programs.script = ''
