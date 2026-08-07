@@ -39,28 +39,27 @@
       shellBundle =
         app:
         let
+          # Collect all of the packages into one derivation.
           appDrv = pkgs.symlinkJoin {
             name = "${app.name}";
             paths = app.programs.packages;
           };
         in
-        # Passthru
         appDrv.overrideAttrs (_: {
           passthru = (mkPassthru app appDrv) // {
             override =
               newArgs:
               let
-                oldMainPackage = app.programs.mainPackage;
-                newMainPackage = oldMainPackage.override newArgs;
-                newPackages = map (p: if p == oldMainPackage then newMainPackage else p) app.programs.packages;
                 newApp = app // {
                   programs = app.programs // {
-                    mainPackage = newMainPackage;
-                    packages = newPackages;
+                    # If package name matches the app name, then we override it.
+                    packages = map (
+                      p: if lib.strings.getName p == app.name then p.override newArgs else p
+                    ) app.programs.packages;
                   };
                 };
               in
-                shellBundle newApp;
+              shellBundle newApp;
           };
         });
 
