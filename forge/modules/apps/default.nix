@@ -39,7 +39,6 @@
       shellBundle =
         app:
         let
-          # Collect all of the packages into one derivation.
           appDrv = pkgs.symlinkJoin {
             name = "${app.name}";
             paths = app.programs.packages;
@@ -48,10 +47,20 @@
             packageName: newArgs:
             let
               matches = p: lib.strings.getName p == packageName;
-              packageMatched = lib.any matches app.programs.packages;
+              mainPackageMatches = app.programs.mainPackage != null && matches app.programs.mainPackage;
+              packageMatched = mainPackageMatches || lib.any matches app.programs.packages;
 
               newApp = app // {
                 programs = app.programs // {
+                  # If mainPackage is not null and matches the package name, then we override
+                  mainPackage =
+                    if app.programs.mainPackage != null then
+                      if matches app.programs.mainPackage then
+                        app.programs.mainPackage.override newArgs
+                      else
+                        app.programs.mainPackage
+                    else
+                      null;
                   # If package name matches packageName, then we override it.
                   packages = map (p: if matches p then p.override newArgs else p) app.programs.packages;
                 };
