@@ -1,7 +1,12 @@
 {
   pkgs,
+  config,
+  lib,
   ...
 }:
+let
+  app = config.apps.signaturepdf;
+in
 {
   pkgs.signaturepdf = {
     build.identityBuilder = {
@@ -17,8 +22,12 @@
       others, as well as organizing pages (merge, sort, rotate, delete,
       extract), editing metadata, and compressing PDF files.
 
-      Web interface: [http://localhost:8080](http://localhost:8080)
+      Web interface: [http://localhost:${app.data.port.content}](http://localhost:${app.data.port.content})
     '';
+
+    data = {
+      port = "8080";
+    };
 
     links = {
       website = "https://pdf.24eme.fr";
@@ -46,10 +55,13 @@
             installPhase = builtins.replaceStrings [ "localhost:\$port" ] [ "0.0.0.0:\$port" ] old.installPhase;
           });
           argv = [
-            "8080"
+            app.data.port.content
           ];
           ports = [
-            "8080:8080"
+            (lib.join ":" [
+              app.data.port.content
+              app.data.port.content
+            ])
           ];
         };
       };
@@ -60,7 +72,7 @@
 
     test.services.script = ''
       curl="curl --retry 5 --retry-max-time 120 --retry-all-errors"
-      $curl localhost:8080 | grep "Signature PDF"
+      $curl localhost:${app.data.port.content} | grep "Signature PDF"
     '';
   };
 }
