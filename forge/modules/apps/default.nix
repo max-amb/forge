@@ -46,7 +46,26 @@
         in
         # Passthru
         appDrv.overrideAttrs (_: {
-          passthru = mkPassthru app appDrv;
+          passthru = (mkPassthru app appDrv) // {
+
+            /**
+              To override something in the data attrset of an application recipe, e.g. changing ports.
+
+              Should be indicated in the documentation of the package when this is an option.
+            */
+            overrideRecipe =
+              attrs:
+              let
+                dataMatched = (builtins.intersectAttrs attrs app.data) != { };
+                newApp = app // {
+                  data = app.data // attrs;
+                };
+              in
+              assert
+                dataMatched
+                || throw "The attrset passed into overrideRecipe does not intersect with the data attrset for the application you are overriding";
+              shellBundle newApp;
+          };
         });
 
       mkPassthru =
