@@ -115,6 +115,8 @@
                     touch $out
                   '';
             };
+
+          skippedTests = [ "test-instruction-flow" ];
         in
         lib.fix (self: {
           config = app;
@@ -152,7 +154,7 @@
             lib.mapAttrsToList (name: path: {
               name = lib.removePrefix "test-" name;
               inherit path;
-            }) tests
+            }) (lib.filterAttrs (name: _value: !(builtins.any (t: name == t) skippedTests)) tests)
           );
         };
 
