@@ -12,6 +12,7 @@ type alias App =
     , app_description : String
     , app_longDescription : String
     , app_usage : String
+    , app_instructions: AppInstructions
     , app_programs : AppPrograms
     , app_services : AppServices
     , app_ngi : Ngi
@@ -21,6 +22,9 @@ type alias App =
     , app_hasIcon : Bool
     }
 
+type alias Instruction = { description: String, command: String, mockCommand: Maybe String }
+type alias InstructionFlow = List Instruction
+type alias AppInstructions = List InstructionFlow
 
 decodeApp : Decoder App
 decodeApp =
@@ -31,6 +35,7 @@ decodeApp =
         |> Decode.andMap (Decode.field "description" Decode.string)
         |> Decode.andMap (Decode.field "longDescription" Decode.string)
         |> Decode.andMap (Decode.field "usage" Decode.string)
+        |> Decode.andMap (Decode.field "instructions" decodeAppInstructions)
         |> Decode.andMap (Decode.field "programs" decodeAppPrograms)
         |> Decode.andMap (Decode.field "services" decodeAppServices)
         |> Decode.andMap (Decode.field "ngi" decodeNgi)
@@ -67,6 +72,25 @@ type alias AppPrograms =
     , appPrograms_mainPackage : Maybe String
     }
 
+decodeAppInstructions : Decoder AppInstructions
+decodeAppInstructions =
+    Decode.field "instructionFlows" decodeInstructionFlows
+
+decodeInstructionFlows : Decoder (List InstructionFlow)
+decodeInstructionFlows =
+    Decode.dict decodeInstructionFlow
+        |> Decode.map Dict.values 
+
+decodeInstructionFlow : Decoder InstructionFlow
+decodeInstructionFlow = 
+    Decode.list decodeInstruction
+
+decodeInstruction : Decoder Instruction
+decodeInstruction =
+    Decode.map3 Instruction
+        (Decode.field "description" Decode.string)
+        (Decode.field "command" Decode.string)
+        (Decode.field "mockCommand" (Decode.maybe Decode.string))
 
 decodeAppPrograms : Decoder AppPrograms
 decodeAppPrograms =

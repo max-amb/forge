@@ -18,6 +18,9 @@ import Main.Model.Route exposing (..)
 import Main.Update exposing (..)
 import Main.Update.Types exposing (..)
 import Main.View.Page.App.Run exposing (..)
+import Markdown.Block
+import Markdown.Parser
+import Markdown.Renderer
 
 
 viewPageApp : Model -> PageApp -> Html Update
@@ -29,6 +32,7 @@ viewPageApp model pageApp =
                 [ viewPageAppFeedback model
                 , viewPageAppHeader model pageApp
                 , viewPageAppDescription model pageApp
+                , viewPageAppInstructions model pageApp
                 , viewPageAppRun model pageApp
                 , viewPageAppIconModal model pageApp
                 ]
@@ -41,6 +45,29 @@ viewPageApp model pageApp =
                 ]
             ]
         ]
+
+viewPageAppInstructions : Model -> PageApp -> Html Update
+viewPageAppInstructions _ pageApp =
+    let
+       instructions = List.map (\li -> 
+          div [ class "text-body-secondary" ]
+              (List.map (\i -> 
+                  div [ class "text-body-secondary" ]
+                      [ -- Command
+                          div [] [ String.concat [ "```bash\n", i.command, "\n```" ] |> Markdown.render ],
+                          h4 [ class "mb-3" ] [ text i.description ]
+                      ]
+              ) li)
+          ) pageApp.pageApp_app.app_instructions 
+    in
+    if not <| List.isEmpty pageApp.pageApp_app.app_instructions then
+        div [ id "instructions", class "mt-4" ]
+            [ hr [] []
+            , h4 [ class "mb-3" ] [ text "Instructions:" ]
+            , div [ class "text-body-secondary" ]
+                instructions
+            ]
+    else text ""
 
 
 viewPageAppHeader : Model -> PageApp -> Html Update
