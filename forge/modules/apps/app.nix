@@ -151,6 +151,29 @@
         lib.types.lazyAttrsOf dataItemType;
     };
 
+    instructions = lib.mkOption {
+      type =
+        let
+          instruction = lib.types.submoduleWith {
+            modules = [
+              ./instruction.nix
+            ];
+          };
+
+          instructionList = {
+            options = {
+              instructionFlows = lib.mkOption {
+                type = lib.types.listOf (lib.types.listOf instruction);
+              };
+            };
+          };
+
+        in
+        lib.types.submoduleWith {
+          modules = [ instructionList ];
+        };
+    };
+
     # Portable services configuration
     # https://nixos.org/manual/nixos/unstable/#modular-services
     services = lib.mkOption {
