@@ -64,6 +64,29 @@
               touch $out
             '';
           };
+
+          testInstructionFlow =
+            { name, instructions }:
+            pkgs.testers.runCommand {
+              name = "${name}-instructions-test";
+              buildInputs = [
+                finalApp
+              ]
+              ++ lib.optional (app.programs.mainPackage != null) app.programs.mainPackage
+              ++ app.test.programs.packages;
+
+              script = ''
+                ${builtins.foldl' (
+                  acc: curr:
+                  lib.concatLines [
+                    acc
+                    curr.command
+                  ]
+                ) "" instructions}
+                touch $out
+              '';
+            };
+
           tests =
             lib.optionalAttrs (app.services.runtimes.container.enable && app.test.services.script != "") {
               test-services-container = app.test.services.result.containerBuild;
@@ -73,6 +96,24 @@
             }
             // lib.optionalAttrs (app.test.programs.script != "") {
               test-programs = testProgramsDrv;
+            }
+            // lib.optionalAttrs (app.instructions.instructionFlows != [ ]) {
+              test-instruction-flow = lib.mapAttrs (
+                name: value:
+                testInstructionFlow {
+                  name = name;
+                  instructions = value;
+                }
+              ) app.instructions.instructionFlows;
+
+              test-all-instruction-flows =
+                pkgs.runCommand "run-all"
+                  {
+                    buildInputs = builtins.attrValues tests.test-instruction-flow;
+                  }
+                  ''
+                    touch $out
+                  '';
             };
         in
         lib.fix (self: {

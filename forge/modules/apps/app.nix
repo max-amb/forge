@@ -163,7 +163,7 @@
           instructionList = {
             options = {
               instructionFlows = lib.mkOption {
-                type = lib.types.listOf (lib.types.listOf instruction);
+                type = lib.types.attrsOf (lib.types.listOf instruction);
               };
             };
           };
