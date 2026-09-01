@@ -22,9 +22,18 @@ type alias App =
     , app_hasIcon : Bool
     }
 
-type alias Instruction = { description: String, command: String, mockCommand: Maybe String }
-type alias InstructionFlow = List Instruction
-type alias AppInstructions = List InstructionFlow
+
+type alias Instruction =
+    { description : String, command : String, altCommand : Maybe String }
+
+
+type alias InstructionFlow =
+    (String, List Instruction)
+
+
+type alias AppInstructions =
+    List InstructionFlow
+
 
 decodeApp : Decoder App
 decodeApp =
@@ -90,7 +99,8 @@ decodeInstruction =
     Decode.map3 Instruction
         (Decode.field "description" Decode.string)
         (Decode.field "command" Decode.string)
-        (Decode.field "mockCommand" (Decode.maybe Decode.string))
+        (Decode.field "altCommand" (Decode.maybe Decode.string))
+
 
 decodeAppPrograms : Decoder AppPrograms
 decodeAppPrograms =
