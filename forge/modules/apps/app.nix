@@ -151,7 +151,7 @@
         lib.types.lazyAttrsOf dataItemType;
     };
 
-    instructions = lib.mkOption {
+    instructionFlows = lib.mkOption {
       type =
         let
           instruction = lib.types.submoduleWith {
@@ -167,11 +167,8 @@
               };
             };
           };
-
         in
-        lib.types.submoduleWith {
-          modules = [ instructionList ];
-        };
+          lib.types.attrsOf (lib.types.listOf instruction);
     };
 
     # Portable services configuration

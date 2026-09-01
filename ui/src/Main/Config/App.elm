@@ -12,7 +12,7 @@ type alias App =
     , app_description : String
     , app_longDescription : String
     , app_usage : String
-    , app_instructions: AppInstructions
+    , app_instructions : AppInstructionFlows
     , app_programs : AppPrograms
     , app_services : AppServices
     , app_ngi : Ngi
@@ -21,19 +21,6 @@ type alias App =
     , app_maintainers : List Maintainer
     , app_hasIcon : Bool
     }
-
-
-type alias Instruction =
-    { description : String, command : String, altCommand : Maybe String }
-
-
-type alias InstructionFlow =
-    (String, List Instruction)
-
-
-type alias AppInstructions =
-    List InstructionFlow
-
 
 decodeApp : Decoder App
 decodeApp =
@@ -44,7 +31,7 @@ decodeApp =
         |> Decode.andMap (Decode.field "description" Decode.string)
         |> Decode.andMap (Decode.field "longDescription" Decode.string)
         |> Decode.andMap (Decode.field "usage" Decode.string)
-        |> Decode.andMap (Decode.field "instructions" decodeAppInstructions)
+        |> Decode.andMap (Decode.field "instructions" decodeAppInstructionFlows)
         |> Decode.andMap (Decode.field "programs" decodeAppPrograms)
         |> Decode.andMap (Decode.field "services" decodeAppServices)
         |> Decode.andMap (Decode.field "ngi" decodeNgi)
@@ -81,27 +68,6 @@ type alias AppPrograms =
     , appPrograms_mainPackage : Maybe String
     }
 
-decodeAppInstructions : Decoder AppInstructions
-decodeAppInstructions =
-    Decode.field "instructionFlows" decodeInstructionFlows
-
-decodeInstructionFlows : Decoder (List InstructionFlow)
-decodeInstructionFlows =
-    Decode.dict decodeInstructionFlow
-        |> Decode.map Dict.values 
-
-decodeInstructionFlow : Decoder InstructionFlow
-decodeInstructionFlow = 
-    Decode.list decodeInstruction
-
-decodeInstruction : Decoder Instruction
-decodeInstruction =
-    Decode.map3 Instruction
-        (Decode.field "description" Decode.string)
-        (Decode.field "command" Decode.string)
-        (Decode.field "altCommand" (Decode.maybe Decode.string))
-
-
 decodeAppPrograms : Decoder AppPrograms
 decodeAppPrograms =
     Decode.map4 AppPrograms
@@ -129,6 +95,35 @@ decodeAppProgramsRuntimesShell =
     Decode.map AppProgramsRuntimesShell
         (Decode.field "enable" Decode.bool)
 
+
+type alias Instruction =
+    { description : String, command : Maybe String, altCommand : Maybe String }
+
+
+type alias InstructionFlow =
+    (String, List Instruction)
+
+
+type alias AppInstructionFlows =
+    List InstructionFlow
+
+
+decodeAppInstructionFlows : Decoder (List InstructionFlow)
+decodeAppInstructionFlows =
+    Decode.keyValuePairs decodeInstructionFlow
+
+
+decodeInstructionFlow : Decoder (List Instruction)
+decodeInstructionFlow =
+    Decode.list decodeInstruction
+
+
+decodeInstruction : Decoder Instruction
+decodeInstruction =
+    Decode.map3 Instruction
+        (Decode.field "description" Decode.string)
+        (Decode.maybe (Decode.field "command" Decode.string))
+        (Decode.maybe (Decode.field "altCommand" Decode.string))
 
 type alias AppResource =
     { appResource_ports : List String

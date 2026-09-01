@@ -97,14 +97,14 @@
             // lib.optionalAttrs (app.test.programs.script != "") {
               test-programs = testProgramsDrv;
             }
-            // lib.optionalAttrs (app.instructions.instructionFlows != [ ]) {
+            // lib.optionalAttrs (app.instructionFlows != [ ]) {
               test-instruction-flow = lib.mapAttrs (
                 name: value:
                 testInstructionFlow {
                   name = name;
                   instructions = value;
                 }
-              ) app.instructions.instructionFlows;
+              ) app.instructionFlows;
 
               test-all-instruction-flows =
                 pkgs.runCommand "run-all"
