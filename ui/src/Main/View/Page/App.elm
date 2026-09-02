@@ -2,9 +2,10 @@ module Main.View.Page.App exposing (..)
 
 import Dict
 import Html exposing (Html, a, button, div, h2, h4, h6, hr, img, li, p, small, span, text, ul)
-import Html.Attributes exposing (attribute, class, href, id, rel, src, style, tabindex, target, title)
+import Html.Attributes exposing (attribute, class, href, id, rel, src, style, tabindex, target)
 import Html.Events exposing (stopPropagationOn)
 import Json.Decode as Decode
+import List.Extra exposing (find)
 import Main.Config exposing (..)
 import Main.Config.App exposing (..)
 import Main.Helpers.Html exposing (..)
@@ -18,9 +19,6 @@ import Main.Model.Route exposing (..)
 import Main.Update exposing (..)
 import Main.Update.Types exposing (..)
 import Main.View.Page.App.Run exposing (..)
-import Markdown.Block
-import Markdown.Parser
-import Markdown.Renderer
 
 
 viewPageApp : Model -> PageApp -> Html Update
@@ -32,7 +30,9 @@ viewPageApp model pageApp =
                 [ viewPageAppFeedback model
                 , viewPageAppHeader model pageApp
                 , viewPageAppDescription model pageApp
-                , viewPageAppInstructions model pageApp
+                , viewPageAppInstructionFlows model pageApp
+                , div [ class "tab-content" ]
+                    [ viewPageAppInstructionFlow model pageApp ]
                 , viewPageAppRun model pageApp
                 , viewPageAppIconModal model pageApp
                 ]
@@ -46,28 +46,68 @@ viewPageApp model pageApp =
             ]
         ]
 
-viewPageAppInstructions : Model -> PageApp -> Html Update
-viewPageAppInstructions _ pageApp =
+
+viewPageAppInstructionFlows : Model -> PageApp -> Html Update
+viewPageAppInstructionFlows model pageApp =
+    ul [ class "nav nav-pills mb-4" ]
+        (List.map (\i -> viewPageAppInstructionFlowTab model pageApp i) pageApp.pageApp_app.app_instructions)
+
+
+viewPageAppInstructionFlow : Model -> PageApp -> Html Update
+viewPageAppInstructionFlow _ pageApp =
     let
-       instructions = List.map (\li -> 
-          div [ class "text-body-secondary" ]
-              (List.map (\i -> 
-                  div [ class "text-body-secondary" ]
-                      [ -- Command
-                          div [] [ String.concat [ "```bash\n", i.command, "\n```" ] |> Markdown.render ],
-                          h4 [ class "mb-3" ] [ text i.description ]
-                      ]
-              ) li)
-          ) pageApp.pageApp_app.app_instructions 
+        ins instructionFlow =
+            List.indexedMap
+                (\_ i ->
+                    let
+                        command =
+                            if i.altCommand /= Nothing then
+                                i.altCommand
+
+                            else
+                                i.command
+                    in
+                    div [ class "text-body-secondary" ]
+                        [ p [] [ i.description |> Markdown.render ]
+                        , bashCodeBlock <| Maybe.withDefault "" command
+                        ]
+                )
+                (Tuple.second <| instructionFlow)
+
+        getInstruction =
+            case pageApp.pageApp_route.routeApp_instructionFlow of
+                Nothing ->
+                    List.head pageApp.pageApp_app.app_instructions
+
+                Just i ->
+                    find (\( n, _ ) -> n == i) pageApp.pageApp_app.app_instructions
     in
-    if not <| List.isEmpty pageApp.pageApp_app.app_instructions then
-        div [ id "instructions", class "mt-4" ]
-            [ hr [] []
-            , h4 [ class "mb-3" ] [ text "Instructions:" ]
-            , div [ class "text-body-secondary" ]
-                instructions
+    case getInstruction of
+        Nothing ->
+            text ""
+
+        Just i ->
+            div [] <| ins i
+
+
+viewPageAppInstructionFlowTab : Model -> PageApp -> InstructionFlow -> Html Update
+viewPageAppInstructionFlowTab _ pageApp instructionFlow =
+    li [ class "nav-item" ]
+        [ a
+            [ class "nav-link"
+            , style "cursor" "pointer"
+            , style "border" "none"
+            , attribute "role" "tab"
+            , id <| "x"
+            , let
+                route =
+                    pageApp.pageApp_route
+              in
+              onClick (Update_RouteWithoutHistory (Route_App { route | routeApp_instructionFlow = Just <| Tuple.first instructionFlow }))
             ]
-    else text ""
+            [ span [ class "fw-bold" ] [ text <| Tuple.first instructionFlow ]
+            ]
+        ]
 
 
 viewPageAppHeader : Model -> PageApp -> Html Update
