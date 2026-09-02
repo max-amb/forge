@@ -30,6 +30,7 @@ type alias RouteApp =
     { routeApp_name : AppName
     , routeApp_runShown : Bool
     , routeApp_iconShown : Bool
+    , routeApp_instructionFlow : Maybe String
 
     -- `Nothing` means to select the first available `AppRuntime`.
     -- The selected `AppRuntime` will then be in `pageApp_runtime`
@@ -43,6 +44,7 @@ defaultRouteApp =
     { routeApp_name = ""
     , routeApp_runShown = False
     , routeApp_iconShown = False
+    , routeApp_instructionFlow = Nothing
     , routeApp_runRuntime = Nothing
     , routeApp_focus = Nothing
     }
@@ -227,6 +229,11 @@ deployPath =
 
 appUrlToRoute : AppUrl -> Result ErrorRoute Route
 appUrlToRoute url =
+    let
+        appUrlToInstruction : Maybe String
+        appUrlToInstruction =
+            Dict.get "instructionFlow" url.queryParameters |> Maybe.andThen List.head
+    in
     case url.path |> List.drop (List.length deployPath) of
         [] ->
             Ok <|
@@ -243,6 +250,7 @@ appUrlToRoute url =
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_runShown = True
+                                , routeApp_instructionFlow = appUrlToInstruction
                                 , routeApp_runRuntime = Just AppRuntime_Program
                             }
 
@@ -250,6 +258,7 @@ appUrlToRoute url =
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_runShown = True
+                                , routeApp_instructionFlow = appUrlToInstruction
                                 , routeApp_runRuntime = Just AppRuntime_Shell
                             }
 
@@ -257,6 +266,7 @@ appUrlToRoute url =
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_runShown = True
+                                , routeApp_instructionFlow = appUrlToInstruction
                                 , routeApp_runRuntime = Just AppRuntime_Container
                             }
 
@@ -264,6 +274,7 @@ appUrlToRoute url =
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_runShown = True
+                                , routeApp_instructionFlow = appUrlToInstruction
                                 , routeApp_runRuntime = Just AppRuntime_NixOS
                             }
 
@@ -271,18 +282,21 @@ appUrlToRoute url =
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_runShown = True
+                                , routeApp_instructionFlow = appUrlToInstruction
                             }
 
                         Just "icon" ->
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_iconShown = True
+                                , routeApp_instructionFlow = appUrlToInstruction
                             }
 
                         Just focusId ->
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_runShown = False
+                                , routeApp_instructionFlow = appUrlToInstruction
                                 , routeApp_focus =
                                     case focusId of
                                         "resources" ->
@@ -305,6 +319,7 @@ appUrlToRoute url =
                             { defaultRouteApp
                                 | routeApp_name = appName
                                 , routeApp_runShown = False
+                                , routeApp_instructionFlow = appUrlToInstruction
                             }
 
         [ "apps" ] ->
@@ -389,7 +404,13 @@ routeToAppUrl route =
     case route of
         Route_App routeApp ->
             { path = deployPath ++ [ "app", routeApp.routeApp_name ]
-            , queryParameters = Dict.empty
+            , queryParameters =
+                case routeApp.routeApp_instructionFlow of
+                    Just ins ->
+                        Dict.fromList [ ( "instructionFlow", [ ins ] ) ]
+
+                    Nothing ->
+                        Dict.empty
             , fragment =
                 if routeApp.routeApp_runShown then
                     Just

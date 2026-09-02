@@ -22,6 +22,7 @@ type alias App =
     , app_hasIcon : Bool
     }
 
+
 decodeApp : Decoder App
 decodeApp =
     App
@@ -68,6 +69,7 @@ type alias AppPrograms =
     , appPrograms_mainPackage : Maybe String
     }
 
+
 decodeAppPrograms : Decoder AppPrograms
 decodeAppPrograms =
     Decode.map4 AppPrograms
@@ -101,7 +103,7 @@ type alias Instruction =
 
 
 type alias InstructionFlow =
-    (String, List Instruction)
+    ( String, List Instruction )
 
 
 type alias AppInstructionFlows =
@@ -124,6 +126,7 @@ decodeInstruction =
         (Decode.field "description" Decode.string)
         (Decode.maybe (Decode.field "command" Decode.string))
         (Decode.maybe (Decode.field "altCommand" Decode.string))
+
 
 type alias AppResource =
     { appResource_ports : List String
