@@ -15,8 +15,8 @@
     };
 
     command = lib.mkOption {
-      type = lib.types.str;
-      default = "";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
       description = ''
         The command to execute in the test script.
         This will be shown to the user if `altCommand` is null.

@@ -80,7 +80,7 @@
                   acc: curr:
                   lib.concatLines [
                     acc
-                    curr.command
+                    (if curr.command != null then lib.trim curr.command else "# No command for instruction")
                   ]
                 ) "" instructions}
                 touch $out
