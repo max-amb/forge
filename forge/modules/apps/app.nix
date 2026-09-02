@@ -49,8 +49,8 @@
       description = "Long application description. Maximum 420 characters.";
     };
     usage = lib.mkOption {
-      type = lib.types.str;
-      default = "";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
       description = "Application usage description in markdown format.";
       example = ''
         Launch the application in your browser at `http://localhost:8080`.

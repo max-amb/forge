@@ -175,5 +175,15 @@
           // lib.optionalAttrs (bundled ? vm) { "apps.${appName}.vm" = bundled.vm; }
         ) bundledApps;
 
+      warnings = lib.flatten (
+        map (app: [
+          {
+            condition = app.usage != null; 
+            message = ''
+              App `${app.name}`: The `usage` field is deprecated in favour of a combination of `longDescription` and `instructionFlows`.
+            '';
+          }
+        ]) (lib.attrValues config.forge.apps)
+      );
     };
 }
