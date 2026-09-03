@@ -19,6 +19,7 @@ import Main.Model.Route exposing (..)
 import Main.Update exposing (..)
 import Main.Update.Types exposing (..)
 import Main.View.Page.App.Run exposing (..)
+import Maybe.Extra exposing (orElse)
 
 
 viewPageApp : Model -> PageApp -> Html Update
@@ -49,7 +50,7 @@ viewPageApp model pageApp =
 
 viewPageAppInstructionFlows : Model -> PageApp -> Html Update
 viewPageAppInstructionFlows model pageApp =
-    ul [ class "nav nav-pills mb-4" ]
+    ul [ class "nav nav-underline nav-fill mb-1" ]
         (List.map (\i -> viewPageAppInstructionFlowTab model pageApp i) pageApp.pageApp_app.app_instructions)
 
 
@@ -74,13 +75,14 @@ viewPageAppInstructionFlow _ pageApp =
                 )
                 (Tuple.second <| instructionFlow)
 
+        getInstruction : Maybe InstructionFlow
         getInstruction =
             case pageApp.pageApp_route.routeApp_instructionFlow of
                 Nothing ->
                     List.head pageApp.pageApp_app.app_instructions
 
                 Just i ->
-                    find (\( n, _ ) -> n == i) pageApp.pageApp_app.app_instructions
+                    find (\( n, _ ) -> n == i) pageApp.pageApp_app.app_instructions |> orElse (List.head pageApp.pageApp_app.app_instructions)
     in
     case getInstruction of
         Nothing ->
@@ -89,16 +91,20 @@ viewPageAppInstructionFlow _ pageApp =
         Just i ->
             div [] <| ins i
 
+instructionIsActive : PageApp -> InstructionFlow -> Bool
+instructionIsActive pageApp instructionFlow =
+    case pageApp.pageApp_route.routeApp_instructionFlow of
+        -- We are then looking for the first instruction
+        Nothing -> List.head pageApp.pageApp_app.app_instructions == Just instructionFlow
+        Just i -> i == Tuple.first instructionFlow
 
 viewPageAppInstructionFlowTab : Model -> PageApp -> InstructionFlow -> Html Update
 viewPageAppInstructionFlowTab _ pageApp instructionFlow =
     li [ class "nav-item" ]
-        [ a
-            [ class "nav-link"
+        [ button
+            [ class ([ "nav-link", if instructionIsActive pageApp instructionFlow then "active" else "" ] |> String.join " ")
             , style "cursor" "pointer"
-            , style "border" "none"
-            , attribute "role" "tab"
-            , id <| "x"
+            , id <| "instructionFlow-" ++ (Tuple.first instructionFlow)
             , let
                 route =
                     pageApp.pageApp_route
