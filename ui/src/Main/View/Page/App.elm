@@ -1,11 +1,10 @@
 module Main.View.Page.App exposing (..)
 
 import Dict
-import Html exposing (Html, a, button, div, h2, h4, h6, hr, img, li, p, small, span, text, ul)
+import Html exposing (Html, a, button, details, div, h2, h4, h6, hr, img, li, p, small, summary, text, ul)
 import Html.Attributes exposing (attribute, class, href, id, rel, src, style, tabindex, target)
 import Html.Events exposing (stopPropagationOn)
 import Json.Decode as Decode
-import List.Extra exposing (find)
 import Main.Config exposing (..)
 import Main.Config.App exposing (..)
 import Main.Helpers.Html exposing (..)
@@ -19,7 +18,8 @@ import Main.Model.Route exposing (..)
 import Main.Update exposing (..)
 import Main.Update.Types exposing (..)
 import Main.View.Page.App.Run exposing (..)
-import Maybe.Extra exposing (orElse)
+import Set
+import Set.Extra
 
 
 viewPageApp : Model -> PageApp -> Html Update
@@ -32,8 +32,6 @@ viewPageApp model pageApp =
                 , viewPageAppHeader model pageApp
                 , viewPageAppDescription model pageApp
                 , viewPageAppInstructionFlows model pageApp
-                , div [ class "tab-content" ]
-                    [ viewPageAppInstructionFlow model pageApp ]
                 , viewPageAppRun model pageApp
                 , viewPageAppIconModal model pageApp
                 ]
@@ -49,15 +47,19 @@ viewPageApp model pageApp =
 
 
 viewPageAppInstructionFlows : Model -> PageApp -> Html Update
-viewPageAppInstructionFlows model pageApp =
-    ul [ class "nav nav-underline nav-fill mb-1" ]
-        (List.map (\i -> viewPageAppInstructionFlowTab model pageApp i) pageApp.pageApp_app.app_instructions)
+viewPageAppInstructionFlows _ pageApp =
+    div []
+        [ hr [] []
+        , h4 [] [ text "Instructions" ]
+        , div [ class "accordion" ]
+            (List.map (viewPageAppInstructionFlow pageApp) pageApp.pageApp_app.app_instructions)
+        ]
 
 
-viewPageAppInstructionFlow : Model -> PageApp -> Html Update
-viewPageAppInstructionFlow _ pageApp =
+viewPageAppInstructionFlow : PageApp -> InstructionFlow -> Html Update
+viewPageAppInstructionFlow pageApp instructionFlow =
     let
-        ins instructionFlow =
+        ins =
             List.indexedMap
                 (\_ i ->
                     let
@@ -74,46 +76,35 @@ viewPageAppInstructionFlow _ pageApp =
                         ]
                 )
                 (Tuple.second <| instructionFlow)
-
-        getInstruction : Maybe InstructionFlow
-        getInstruction =
-            case pageApp.pageApp_route.routeApp_instructionFlow of
-                Nothing ->
-                    List.head pageApp.pageApp_app.app_instructions
-
-                Just i ->
-                    find (\( n, _ ) -> n == i) pageApp.pageApp_app.app_instructions |> orElse (List.head pageApp.pageApp_app.app_instructions)
     in
-    case getInstruction of
-        Nothing ->
-            text ""
+    details
+        (List.append [ class "accordion-item" ]
+            (if instructionIsActive pageApp instructionFlow then
+                [ attribute "open" "" ]
 
-        Just i ->
-            div [] <| ins i
-
-instructionIsActive : PageApp -> InstructionFlow -> Bool
-instructionIsActive pageApp instructionFlow =
-    case pageApp.pageApp_route.routeApp_instructionFlow of
-        -- We are then looking for the first instruction
-        Nothing -> List.head pageApp.pageApp_app.app_instructions == Just instructionFlow
-        Just i -> i == Tuple.first instructionFlow
-
-viewPageAppInstructionFlowTab : Model -> PageApp -> InstructionFlow -> Html Update
-viewPageAppInstructionFlowTab _ pageApp instructionFlow =
-    li [ class "nav-item" ]
-        [ button
-            [ class ([ "nav-link", if instructionIsActive pageApp instructionFlow then "active" else "" ] |> String.join " ")
-            , style "cursor" "pointer"
-            , id <| "instructionFlow-" ++ (Tuple.first instructionFlow)
+             else
+                []
+            )
+        )
+        [ summary
+            [ class "accordion-button accordion-header fw-bold"
             , let
                 route =
                     pageApp.pageApp_route
               in
-              onClick (Update_RouteWithoutHistory (Route_App { route | routeApp_instructionFlow = Just <| Tuple.first instructionFlow }))
+              onClick
+                (Update_RouteWithoutHistory
+                    (Route_App { route | routeApp_instructionFlows = Set.Extra.toggle (Tuple.first instructionFlow) route.routeApp_instructionFlows })
+                )
             ]
-            [ span [ class "fw-bold" ] [ text <| Tuple.first instructionFlow ]
-            ]
+            [ text <| Tuple.first instructionFlow ]
+        , div [ class "accordion-body" ] ins
         ]
+
+
+instructionIsActive : PageApp -> InstructionFlow -> Bool
+instructionIsActive pageApp instructionFlow =
+    Set.member (Tuple.first instructionFlow) pageApp.pageApp_route.routeApp_instructionFlows
 
 
 viewPageAppHeader : Model -> PageApp -> Html Update
