@@ -152,6 +152,7 @@
     };
 
     instructionFlows = lib.mkOption {
+      default = [ ];
       type =
         let
           instruction = lib.types.submoduleWith {
@@ -160,15 +161,14 @@
             ];
           };
 
-          instructionList = {
+          instructionFlow = {
             options = {
-              instructionFlows = lib.mkOption {
-                type = lib.types.attrsOf (lib.types.listOf instruction);
-              };
+              flow = lib.mkOption { type = lib.types.listOf instruction; };
+              name = lib.mkOption { type = lib.types.str; };
             };
           };
         in
-          lib.types.attrsOf (lib.types.listOf instruction);
+        lib.types.listOf (lib.types.submoduleWith { modules = [ instructionFlow ]; });
     };
 
     # Portable services configuration

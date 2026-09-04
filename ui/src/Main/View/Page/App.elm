@@ -48,12 +48,16 @@ viewPageApp model pageApp =
 
 viewPageAppInstructionFlows : Model -> PageApp -> Html Update
 viewPageAppInstructionFlows _ pageApp =
-    div []
-        [ hr [] []
-        , h4 [] [ text "Instructions" ]
-        , div [ class "accordion" ]
-            (List.map (viewPageAppInstructionFlow pageApp) pageApp.pageApp_app.app_instructions)
-        ]
+    if not <| List.isEmpty pageApp.pageApp_app.app_instructions then
+        div []
+            [ hr [] []
+            , h4 [] [ text "Instructions" ]
+            , div [ class "accordion" ]
+                (List.map (viewPageAppInstructionFlow pageApp) pageApp.pageApp_app.app_instructions)
+            ]
+
+    else
+        text ""
 
 
 viewPageAppInstructionFlow : PageApp -> InstructionFlow -> Html Update

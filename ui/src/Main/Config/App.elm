@@ -110,14 +110,16 @@ type alias AppInstructionFlows =
     List InstructionFlow
 
 
-decodeAppInstructionFlows : Decoder (List InstructionFlow)
+decodeAppInstructionFlows : Decoder AppInstructionFlows
 decodeAppInstructionFlows =
-    Decode.keyValuePairs decodeInstructionFlow
+    Decode.list decodeInstructionFlow
 
 
-decodeInstructionFlow : Decoder (List Instruction)
+decodeInstructionFlow : Decoder InstructionFlow
 decodeInstructionFlow =
-    Decode.list decodeInstruction
+    Decode.map2 (\n f -> ( n, f ))
+        (Decode.field "name" Decode.string)
+        (Decode.field "flow" <| Decode.list decodeInstruction)
 
 
 decodeInstruction : Decoder Instruction

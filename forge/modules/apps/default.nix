@@ -185,5 +185,14 @@
           }
         ]) (lib.attrValues config.forge.apps)
       );
+
+      assertions = lib.flatten (
+        map (app: [
+          {
+            condition = lib.lists.allUnique (map (insFlow: insFlow.name) app.instructionFlows);
+            message = "${toString app.name} has two instruction flows with the same name";
+          }
+        ]) (lib.attrValues config.forge.apps)
+      );
     };
 }
