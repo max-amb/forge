@@ -6,32 +6,12 @@
   ...
 }:
 let
-  getEndNodes =
-    tree:
-    let
-      go =
-        id: curr:
-        if builtins.elem "description" (builtins.attrNames curr) then
-          {
-            ${lib.lists.last id} = {
-              pos = id;
-              val = curr;
-            };
-          }
-        else
-          lib.foldlAttrs (
-            acc: name: value:
-            lib.recursiveUpdate acc (go (id ++ [ name ]) value)
-          ) { } curr;
-    in
-    go [ ] tree;
-
   treeNode =
     appData:
     lib.mkOptionType {
       name = "treeNode";
       description = "tree node with leaves ${
-        lib.optionDescriptionPhrase (class: class == "noun" || class == "composite") appData
+        lib.types.optionDescriptionPhrase (class: class == "noun" || class == "composite") appData
       }";
       descriptionClass = "conjunction"; # treeNode OR appData
       check = val: builtins.isAttrs val;
@@ -199,7 +179,7 @@ in
       bundledApps = lib.foldlAttrs (
         acc: name: app:
         lib.recursiveUpdate acc (lib.setAttrByPath app.pos (shellBundle app.val))
-      ) config.forge.apps (getEndNodes config.forge.apps);
+      ) config.forge.apps (forge-lib.getEndNodes config.forge.apps);
       packagesWithNamespace = pkgs.callPackage (forge-lib.flakePackagesWithNamespace {
         namespace = "apps";
         derivations = bundledApps;
