@@ -178,7 +178,7 @@ in
 
       bundledApps = lib.foldlAttrs (
         acc: name: app:
-        lib.recursiveUpdate acc (lib.setAttrByPath app.pos (shellBundle app.val))
+        if !app.val.broken then lib.recursiveUpdate acc (lib.setAttrByPath app.pos (shellBundle app.val)) else acc
       ) config.forge.apps (forge-lib.getEndNodes config.forge.apps);
       packagesWithNamespace = pkgs.callPackage (forge-lib.flakePackagesWithNamespace {
         namespace = "apps";
