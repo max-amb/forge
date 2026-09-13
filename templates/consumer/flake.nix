@@ -1,5 +1,5 @@
 {
-  description = "NGI Forge";
+  description = "NGI Forge consumer";
 
   nixConfig = {
     extra-substituters = [ "https://ngi-forge.cachix.org" ];
@@ -18,7 +18,9 @@
       systems = [ "x86_64-linux" ];
       imports = [ inputs.ngi-forge.flakeModules.default ];
 
-      debug = true;
+      # Uncomment this to enable debug attributes of this flake.
+      # https://flake.parts/options/flake-parts.html?highlight=debug#opt-debug
+      # debug = true;
 
       perSystem =
         { system, pkgs, ... }:
@@ -29,9 +31,6 @@
           forge = {
             # NOTE: update the repository url to your forge. e.g. "github:username/forge-repo"
             repositoryUrl = "github:ngi-nix/forge";
-            maintainerLists = [
-              inputs.ngi-forge.maintainerList
-            ];
             imports = [ (inputs.ngi-forge.inputs.import-tree ./recipes) ];
           };
         };

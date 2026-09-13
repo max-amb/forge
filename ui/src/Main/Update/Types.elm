@@ -22,6 +22,7 @@ type Update
     = -- `Update_Chain us` left-folds `Update` in `us` on the `Model`.
       Update_Chain (List Update)
     | Update_CopyToClipboard String
+    | Update_DownloadFile { filename : String, content : String }
     | Update_Config (Result Http.Error Config)
     | -- `Update_RecipeOptions res` loads the `res` of `updateRecipeOptions` into `model_RecipeOptions`.
       Update_RecipeOptions (Result Http.Error NixModuleOptions)
@@ -36,6 +37,8 @@ type Update
     | Update_CycleTheme
     | Update_Focus String
     | Update_SetPreferences Preferences
+    | Update_ShuffleApps
+    | Update_ToggleAppsSortDropdown
     | Update_DismissFeedback
     | Update_FocusResult (Result Dom.Error ())
     | Update_AmbientKeyPress AmbientKeyState

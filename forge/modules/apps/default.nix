@@ -139,7 +139,7 @@ in
         lib.fix (self: {
           config = app;
           forge.broken = app.broken;
-          pkgs = app.packagesList;
+          packages = app.packages;
         })
         // lib.optionalAttrs app.programs.runtimes.program.enable {
           program = app.programs.mainPackage;

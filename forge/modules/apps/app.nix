@@ -124,13 +124,23 @@
       '';
       type =
         let
-          atomType = lib.types.either lib.types.path lib.types.str;
+          valueType = lib.types.oneOf [
+            lib.types.str
+            lib.types.int
+            lib.types.bool
+            lib.types.float
+          ];
+
+          atomType = lib.types.oneOf [
+            lib.types.path
+            valueType
+          ];
 
           toDataItem =
             value:
-            if lib.isString value then
+            if valueType.check value then
               {
-                content = value;
+                value = value;
               }
             else if lib.isPath value then
               {
@@ -144,7 +154,7 @@
           dataItemType = lib.types.coercedTo atomType toDataItem (
             lib.types.submoduleWith {
               modules = [ ./data-item.nix ];
-              specialArgs = { inherit pkgs; };
+              specialArgs = { inherit pkgs valueType; };
             }
           );
         in
@@ -188,6 +198,19 @@
       description = "Test configuration.";
     };
 
+    broken = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Whether the app is broken.";
+    };
+
+    packages = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.listOf lib.types.package);
+      internal = true;
+      readOnly = true;
+      description = "Lists of packages used by application.";
+    };
+
     result = {
       # HACK:
       # Prevent toJSON from attempting to convert the `eval` option,
@@ -199,56 +222,38 @@
         default = self: "nixos-vm-config";
       };
     };
-
-    broken = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Whether the app is broken.";
-    };
-
-    packages = lib.mkOption {
-      type = lib.types.attrsOf (lib.types.listOf lib.types.package);
-      internal = true;
-      readOnly = true;
-      description = "Set of lists of all app packages.";
-      example = lib.literalExpression ''
-        {
-          programs = config.programs.packages;
-          nixos = config.services.runtimes.nixos.packages;
-        }
-      '';
-    };
-
-    packagesList = lib.mkOption {
-      type = lib.types.listOf lib.types.package;
-      internal = true;
-      readOnly = true;
-      default = lib.flatten (lib.attrValues config.packages);
-      description = "List of all app packages.";
-    };
   };
+
   config = {
     packages =
       let
-        # Returns a list of packages from each attribute path
+        # Collects packages found at `attrPaths` across every item of `attrs`.
+        # Each path may point at either a single package or a list of
+        # packages; non-package values (e.g. `process.command` set to a
+        # bare executable name) are dropped.
         collectPackages =
-          attrs: attrPath:
+          attrPaths: attrs:
           lib.pipe attrs [
-            (lib.mapAttrsToList (_: lib.attrByPath attrPath [ ]))
+            (lib.mapAttrsToList (_: item: map (attrPath: lib.attrByPath attrPath [ ] item) attrPaths))
             (lib.flatten)
+            (lib.filter lib.isDerivation)
           ];
       in
       {
-        programs = config.programs.packages;
-        components = collectPackages config.services.components [
-          "process"
-          "packages"
-        ];
-        containerComponents = collectPackages config.services.runtimes.container.components [
-          "packages"
-        ];
-        nixos = config.services.runtimes.nixos.packages;
-        test = config.test.programs.packages ++ config.test.services.packages;
+        programs = collectPackages [
+          [ "mainPackage" ]
+          [ "packages" ]
+        ] { programs = config.programs; };
+        services = collectPackages [
+          [
+            "process"
+            "command"
+          ]
+          [
+            "process"
+            "packages"
+          ]
+        ] config.services.components;
       };
   };
 }
